@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import random
+import time
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="AI Student Risk System", layout="wide")
@@ -20,7 +21,7 @@ st.markdown("""
     font-family: 'Segoe UI', sans-serif;
 }
 
-/* Glass Card */
+/* Glass Card with animation */
 .glass {
     background: rgba(255, 255, 255, 0.08);
     border-radius: 16px;
@@ -30,14 +31,25 @@ st.markdown("""
     box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     color: white;
     text-align: center;
-    animation: fadeIn 1s ease-in-out;
+
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 0.8s ease forwards;
 }
 
 /* Animation */
-@keyframes fadeIn {
-    from {opacity:0; transform:translateY(20px);}
-    to {opacity:1; transform:translateY(0);}
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
+
+/* Stagger effect */
+.glass:nth-child(1) { animation-delay: 0.1s; }
+.glass:nth-child(2) { animation-delay: 0.2s; }
+.glass:nth-child(3) { animation-delay: 0.3s; }
+.glass:nth-child(4) { animation-delay: 0.4s; }
 
 .glass:hover {
     transform: scale(1.03);
@@ -91,8 +103,12 @@ if not st.session_state["login"]:
             st.error("Invalid Credentials")
     st.stop()
 
+# ---------------- LOADING ANIMATION ----------------
+with st.spinner("🚀 Loading AI Dashboard..."):
+    time.sleep(1)
+
 # ---------------- TITLE ----------------
-st.markdown("<div class='title'>🎓 EduPredict AI </div>", unsafe_allow_html=True)
+st.markdown("<div class='title'>🎓 EduPredict AI</div>", unsafe_allow_html=True)
 st.markdown("<div class='subtitle'>Smart Analytics • Early Risk Detection • Faculty Insights</div>", unsafe_allow_html=True)
 
 # ---------------- LOAD DATA ----------------
@@ -226,25 +242,41 @@ st.markdown("<div class='glass'>", unsafe_allow_html=True)
 
 st.markdown("### 🤖 AI Assistant")
 
-user_input = st.text_input("Ask about students")
+user_input = st.text_input("Ask something like: high risk / attendance / sleep / top student")
 
 if user_input:
     q = user_input.lower()
 
+    high_count = len(df[df['Risk Level'] == 'High Risk'])
+    avg_att = round(df['Attendance'].mean(),2)
+    avg_sleep = round(df['Sleep Hours'].mean(),2)
+
     if "high risk" in q:
-        st.write(f"{len(df[df['Risk Level']=='High Risk'])} high risk students found")
+        st.error(f"⚠ {high_count} students are at HIGH RISK. Immediate attention needed.")
+
     elif "attendance" in q:
-        st.write(f"Average attendance: {round(df['Attendance'].mean(),2)}%")
+        st.info(f"📉 Average attendance is {avg_att}%.")
+
+        if avg_att < 65:
+            st.warning("⚠ Attendance is low. Suggest strict monitoring.")
+
     elif "sleep" in q:
-        st.write(f"Average sleep: {round(df['Sleep Hours'].mean(),2)} hrs")
+        st.info(f"😴 Average sleep is {avg_sleep} hours.")
+
+        if avg_sleep < 6:
+            st.warning("⚠ Students are not getting enough sleep.")
+
     elif "top student" in q:
         top = df.sort_values("Average", ascending=False).iloc[0]
-        st.write(f"Top student: {top['Name']}")
+        st.success(f"🏆 Top student: {top['Name']} with {round(top['Average'],2)} marks.")
+
+    elif "suggest" in q or "recommend" in q:
+        st.write("📌 General Suggestion: Focus on attendance, sleep, and regular study.")
+
     else:
-        st.write("Try: high risk / attendance / sleep / top student")
+        st.warning("🤖 Try: high risk / attendance / sleep / top student / suggest")
 
 st.markdown("</div>", unsafe_allow_html=True)
 
 # ---------------- DOWNLOAD ----------------
 st.download_button("📄 Download Report", df.to_csv(index=False), "report.csv")
-   

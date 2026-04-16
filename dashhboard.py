@@ -7,7 +7,7 @@ import random
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="AI Student Risk System", layout="wide")
 
-# ---------------- UI + ANIMATION CSS ----------------
+# ---------------- PREMIUM UI CSS ----------------
 st.markdown("""
 <style>
 
@@ -30,18 +30,6 @@ st.markdown("""
     box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     color: white;
     text-align: center;
-    animation: fadeIn 1s ease-in-out;
-}
-
-/* Animation */
-@keyframes fadeIn {
-    from {opacity:0; transform:translateY(20px);}
-    to {opacity:1; transform:translateY(0);}
-}
-
-.glass:hover {
-    transform: scale(1.03);
-    transition: 0.3s;
 }
 
 /* Title */
@@ -52,6 +40,7 @@ st.markdown("""
     color: white;
 }
 
+/* Subtitle */
 .subtitle {
     text-align: center;
     font-size: 18px;
@@ -63,6 +52,7 @@ st.markdown("""
     background: linear-gradient(135deg, #6a11cb, #2575fc);
     color: white;
     border-radius: 10px;
+    border: none;
 }
 
 /* Sidebar */
@@ -92,8 +82,8 @@ if not st.session_state["login"]:
     st.stop()
 
 # ---------------- TITLE ----------------
-st.markdown("<div class='title'>🎓 EduPredict AI </div>", unsafe_allow_html=True)
-st.markdown("<div class='subtitle'>Smart Analytics • Early Risk Detection • Faculty Insights</div>", unsafe_allow_html=True)
+st.markdown("<div class='title'>🎓 AI Student Risk Prediction System</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>Smart Analytics • Early Risk Detection •EduPredict AI • Faculty Insights</div>", unsafe_allow_html=True)
 
 # ---------------- LOAD DATA ----------------
 df = pd.read_csv("data.csv")
@@ -157,6 +147,7 @@ c4.markdown(f"<div class='glass'><h3>Low Risk</h3><h1>{len(df[df['Risk Level']==
 
 # ---------------- AI INSIGHTS ----------------
 st.markdown("<div class='glass'>", unsafe_allow_html=True)
+
 st.markdown("### 🧠 AI Insights")
 
 high = df[df["Risk Level"]=="High Risk"]
@@ -168,38 +159,34 @@ else:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# ---------------- ADVANCED ANALYTICS ----------------
-st.markdown("### 📊 Advanced Analytics")
-
-avg_marks = round(df["Average"].mean(),2)
-avg_att = round(df["Attendance"].mean(),2)
-avg_sleep = round(df["Sleep Hours"].mean(),2)
-
-st.info(f"""
-📊 Avg Marks: {avg_marks}  
-📉 Avg Attendance: {avg_att}%  
-😴 Avg Sleep: {avg_sleep} hrs
-""")
-
 # ---------------- TABLE ----------------
 st.dataframe(df, use_container_width=True)
 
 # ---------------- CHARTS ----------------
-st.plotly_chart(px.pie(df, names="Risk Level", title="Risk Distribution"), use_container_width=True)
-st.plotly_chart(px.bar(df, x="Name", y="Average", color="Risk Level"), use_container_width=True)
-st.plotly_chart(px.scatter(df, x="Attendance", y="Average", color="Risk Level", size="Average"), use_container_width=True)
+fig1 = px.pie(df, names="Risk Level", title="Risk Distribution")
+st.plotly_chart(fig1, use_container_width=True)
+
+fig2 = px.bar(df, x="Name", y="Average", color="Risk Level", title="Performance")
+st.plotly_chart(fig2, use_container_width=True)
+
+fig3 = px.scatter(df, x="Attendance", y="Average", color="Risk Level",
+                  size="Average", hover_data=["Name"])
+st.plotly_chart(fig3, use_container_width=True)
 
 # ---------------- RADAR ----------------
 st.markdown("### 📊 Student Radar")
+
 name = st.selectbox("Select Student", df["Name"])
 student = df[df["Name"]==name].iloc[0]
 
 fig = go.Figure()
+
 fig.add_trace(go.Scatterpolar(
     r=[student[s] for s in subjects],
     theta=subjects,
     fill='toself'
 ))
+
 st.plotly_chart(fig)
 
 # ---------------- STUDENT CARD ----------------
@@ -221,30 +208,30 @@ st.markdown(f"""
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# ---------------- AI CHATBOT ----------------
-st.markdown("<div class='glass'>", unsafe_allow_html=True)
-
-st.markdown("### 🤖 AI Assistant")
-
-user_input = st.text_input("Ask about students")
-
-if user_input:
-    q = user_input.lower()
-
-    if "high risk" in q:
-        st.write(f"{len(df[df['Risk Level']=='High Risk'])} high risk students found")
-    elif "attendance" in q:
-        st.write(f"Average attendance: {round(df['Attendance'].mean(),2)}%")
-    elif "sleep" in q:
-        st.write(f"Average sleep: {round(df['Sleep Hours'].mean(),2)} hrs")
-    elif "top student" in q:
-        top = df.sort_values("Average", ascending=False).iloc[0]
-        st.write(f"Top student: {top['Name']}")
-    else:
-        st.write("Try: high risk / attendance / sleep / top student")
-
-st.markdown("</div>", unsafe_allow_html=True)
-
 # ---------------- DOWNLOAD ----------------
 st.download_button("📄 Download Report", df.to_csv(index=False), "report.csv")
-   
+# ---------------- AI ASSISTANT ----------------
+st.markdown("### 🤖 AI Assistant")
+
+user_input = st.text_input("Ask about students (e.g. 'high risk', 'attendance')")
+
+if user_input:
+    user_input = user_input.lower()
+
+    if "high risk" in user_input:
+        st.write(f"⚠ There are {len(df[df['Risk Level']=='High Risk'])} high risk students.")
+
+    elif "attendance" in user_input:
+        st.write(f"📉 Average attendance is {round(df['Attendance'].mean(),2)}%.")
+
+    elif "sleep" in user_input:
+        st.write(f"😴 Average sleep hours is {round(df['Sleep Hours'].mean(),2)} hrs.")
+
+    elif "top student" in user_input:
+        top = df.sort_values("Average", ascending=False).iloc[0]
+        st.write(f"🏆 Top student is {top['Name']} with {round(top['Average'],2)} marks.")
+
+    else:
+        st.write("🤖 I can help with: high risk, attendance, sleep, top student")
+
+
